@@ -16,6 +16,7 @@ app.use(bodyParser.json())
 client.connect(err => {
   const serviceCollection = client.db(`${process.env.DB_NAME}`).collection(`${process.env.DB_COLLECTION1}`);
   const adminCollection = client.db(`${process.env.DB_NAME}`).collection(`${process.env.DB_COLLECTION2}`);
+  const ordersCollection = client.db(`${process.env.DB_NAME}`).collection(`${process.env.DB_COLLECTION3}`);
 
   // create an admin
   app.post('/addAnAdmin', (req, res) => {
@@ -46,6 +47,51 @@ app.post('/addService', (req, res) => {
           res.send(documents);
       })
 })
+// read all orders
+app.get('/orders', (req, res) => {
+  ordersCollection.find({})
+      .toArray((err, documents) => {
+          res.send(documents);
+      })
+})
+
+// read a service
+app.get('/service/:id', (req, res) => {
+  serviceCollection.find({_id: ObjectId(req.params.id)})
+      .toArray((err, documents) => {
+          res.send(documents[0]);
+      })
+})
+
+// create an order
+app.post('/addOrder', (req, res) => {
+  const order = req.body;
+  ordersCollection.insertOne(order)
+      .then(result => {
+        console.log("order: ",result.insertedCount)
+          res.send(result.insertedCount > 0)
+      })
+});
+
+ // read a loggedInUser is an admin or not by checking email
+ app.post('/isAdmin', (req, res) => {
+  const email = req.body.email;
+  adminCollection.find({ email: email })
+      .toArray((err, admins) => {
+          res.send(admins.length > 0);
+      })
+})
+
+ // read some(matched email) orders from database
+ app.get('/orders/:email', (req, res) => {
+   console.log(req.params.email);
+  ordersCollection.find({ email: req.params.email })
+    .toArray((err, documents) => {
+      console.log("docss: ", documents)
+      res.send(documents)
+    })
+})
+
 
 });
 
