@@ -17,6 +17,7 @@ client.connect(err => {
   const serviceCollection = client.db(`${process.env.DB_NAME}`).collection(`${process.env.DB_COLLECTION1}`);
   const adminCollection = client.db(`${process.env.DB_NAME}`).collection(`${process.env.DB_COLLECTION2}`);
   const ordersCollection = client.db(`${process.env.DB_NAME}`).collection(`${process.env.DB_COLLECTION3}`);
+  const testimonialCollection = client.db(`${process.env.DB_NAME}`).collection(`${process.env.DB_COLLECTION4}`);
 
   // create an admin
   app.post('/addAnAdmin', (req, res) => {
@@ -47,6 +48,7 @@ app.post('/addService', (req, res) => {
           res.send(documents);
       })
 })
+
 // read all orders
 app.get('/orders', (req, res) => {
   ordersCollection.find({})
@@ -92,6 +94,24 @@ app.post('/addOrder', (req, res) => {
     })
 })
 
+// create a testimonial
+app.post('/addTestimonial', (req, res) => {
+  const testimonial = req.body;
+  console.log("testimonial: ",testimonial);
+  testimonialCollection.insertOne(testimonial)
+      .then(result => {
+        console.log(result.insertedCount)
+          res.send(result.insertedCount > 0);
+      })
+})
+
+ // read all testimonials
+ app.get('/testimonials', (req, res) => {
+  testimonialCollection.find({})
+      .toArray((err, documents) => {
+          res.send(documents);
+      })
+})
 
 });
 
