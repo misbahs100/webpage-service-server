@@ -113,18 +113,16 @@ app.post('/addTestimonial', (req, res) => {
       })
 })
 
-// update states
+// update state
 app.post('/updateState/:id', (req, res) => {
   ordersCollection.updateOne({_id: ObjectId(req.params.id)},
-  {$set: {status: req.body.state}}
+  {$set: {state: req.body.state}}
   )
   .then(result => {
     console.log(result);
     res.send(result.modifiedCount > 0);
   })
 
-  // console.log(req.body.state)
-  
 })
 
 // delete one from services collection
