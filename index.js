@@ -8,7 +8,6 @@ const { ObjectId } = require('bson');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lqubf.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
@@ -41,6 +40,14 @@ client.connect(err => {
       })
   })
 
+  // read a (matched id) service
+  app.get('/service/:id', (req, res) => {
+    serviceCollection.find({ _id: ObjectId(req.params.id) })
+      .toArray((err, documents) => {
+        res.send(documents[0]);
+      })
+  })
+
   // read all services
   app.get('/services', (req, res) => {
     serviceCollection.find({})
@@ -49,19 +56,28 @@ client.connect(err => {
       })
   })
 
-  // read all orders
-  app.get('/orders', (req, res) => {
-    ordersCollection.find({})
-      .toArray((err, documents) => {
-        res.send(documents);
+  // update a (matched id) service
+  app.post('/updateService', (req, res) => {
+    console.log(req.body)
+    const name = req.body.name;
+    const price = req.body.price;
+    const description = req.body.description;
+    const imageURL = req.body.imageURL;
+    serviceCollection.updateOne({ _id: ObjectId(req.body.id) },
+      { $set: { name: name, price: price, description: description, imageURL: imageURL } }
+    )
+      .then(result => {
+        console.log(result);
+        res.send(result.modifiedCount > 0);
       })
   })
 
-  // read a service
-  app.get('/service/:id', (req, res) => {
-    serviceCollection.find({ _id: ObjectId(req.params.id) })
-      .toArray((err, documents) => {
-        res.send(documents[0]);
+  // delete one service
+  app.delete('/deleteService/:id', (req, res) => {
+    serviceCollection.deleteOne({ _id: ObjectId(req.params.id) })
+      .then(result => {
+        console.log(result);
+        res.send(result.deletedCount > 0);
       })
   })
 
@@ -73,15 +89,6 @@ client.connect(err => {
         console.log("order: ", result.insertedCount)
         res.send(result.insertedCount > 0)
       })
-  });
-
-  // read a loggedInUser is an admin or not by checking email
-  app.post('/isAdmin', (req, res) => {
-    const email = req.body.email;
-    adminCollection.find({ email: email })
-      .toArray((err, admins) => {
-        res.send(admins.length > 0);
-      })
   })
 
   // read some(matched email) orders from database
@@ -91,6 +98,23 @@ client.connect(err => {
       .toArray((err, documents) => {
         console.log("docss: ", documents)
         res.send(documents)
+      })
+  })
+
+  // read all orders
+  app.get('/orders', (req, res) => {
+    ordersCollection.find({})
+      .toArray((err, documents) => {
+        res.send(documents);
+      })
+  })
+  
+  // read a loggedInUser is an admin or not by checking email
+  app.post('/isAdmin', (req, res) => {
+    const email = req.body.email;
+    adminCollection.find({ email: email })
+      .toArray((err, admins) => {
+        res.send(admins.length > 0);
       })
   })
 
@@ -122,34 +146,9 @@ client.connect(err => {
         console.log(result);
         res.send(result.modifiedCount > 0);
       })
-
   })
 
-  // delete one from services collection
-  app.delete('/deleteService/:id', (req, res) => {
-    serviceCollection.deleteOne({ _id: ObjectId(req.params.id) })
-      .then(result => {
-        console.log(result);
-        res.send(result.deletedCount > 0);
-      })
-  })
-
-  // update service
-  app.post('/updateService', (req, res) => {
-    console.log(req.body)
-    const name = req.body.name;
-    const price = req.body.price;
-    const description = req.body.description;
-    const imageURL = req.body.imageURL;
-    serviceCollection.updateOne({ _id: ObjectId(req.body.id) },
-      { $set: { name: name, price: price, description: description, imageURL:  imageURL} }
-    )
-      .then(result => {
-        console.log(result);
-        res.send(result.modifiedCount > 0);
-      })
-
-  })
+  
 
 
 });
